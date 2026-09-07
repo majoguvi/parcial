@@ -103,11 +103,17 @@ const Wizard = {
         <input class="form-check-input gasto-fijo-card__compartido" type="checkbox" role="switch" id="compartido-${id}">
         <label class="form-check-label" for="compartido-${id}">Es un gasto compartido</label>
 
-        <div class="shared-fields">
-          <div class="shared-fields__type">
-            <label><input type="radio" name="tipo-${id}" value="porcentaje" checked><span>% de aporte</span></label>
-            <label><input type="radio" name="tipo-${id}" value="personas"><span>Nº de personas</span></label>
-          </div>
+        <div class="shared-fields__type">
+          <label>
+            <input type="radio" name="tipo-${id}" value="porcentaje" checked>
+            <span>% de aporte</span>
+          </label>
+
+          <label>
+            <input type="radio" name="tipo-${id}" value="personas">
+            <span>Nº de personas</span>
+          </label>
+        </div>
           <div class="gasto-fijo-card__field">
             <label id="valor-label-${id}">Tu % de aporte</label>
             <input type="number" min="0" step="1" class="form-control gasto-fijo-card__valor-compartido" placeholder="Ej. 50">
