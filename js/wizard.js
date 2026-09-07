@@ -133,6 +133,8 @@ const Wizard = {
     const labelValor = card.querySelector(`#valor-label-${id}`);
     const realAmountEl = card.querySelector(".shared-real-amount");
     const btnQuitar = card.querySelector(".gasto-fijo-card__remove");
+    let valorPorcentaje = "";
+    let valorPersonas = "";
 
     const actualizarCalculo = () => {
       const visible = chkCompartido.checked;
