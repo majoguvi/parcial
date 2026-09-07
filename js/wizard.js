@@ -104,16 +104,16 @@ const Wizard = {
         <label class="form-check-label" for="compartido-${id}">Es un gasto compartido</label>
 
         <div class="shared-fields__type">
-          <label>
-            <input type="radio" name="tipo-${id}" value="porcentaje" checked>
-            <span>% de aporte</span>
-          </label>
+        <label>
+          <input type="radio" name="tipo-${id}" value="porcentaje" checked>
+          <span>% de aporte</span>
+        </label>
 
-          <label>
-            <input type="radio" name="tipo-${id}" value="personas">
-            <span>Nº de personas</span>
-          </label>
-        </div>
+        <label>
+          <input type="radio" name="tipo-${id}" value="personas">
+          <span>Nº de personas</span>
+        </label>
+      </div>
           <div class="gasto-fijo-card__field">
             <label id="valor-label-${id}">Tu % de aporte</label>
             <input type="number" min="0" step="1" class="form-control gasto-fijo-card__valor-compartido" placeholder="Ej. 50">
@@ -138,16 +138,20 @@ const Wizard = {
       const visible = chkCompartido.checked;
 
       camposCompartido.classList.toggle("is-visible", visible);
-        if (!visible) {
-          realAmountEl.textContent = "";
-          return;
-        }
 
-      const tipo = card.querySelector(
+      if (!visible) {
+        realAmountEl.textContent = "";
+        return;
+      }
+
+      const radioSeleccionado = card.querySelector(
         'input[name="tipo-${id}"]:checked'
-      ).value;
+      );
 
-      // Cambiar texto según el tipo de división
+      if (!radioSeleccionado) return;
+
+      const tipo = radioSeleccionado.value;
+
       if (tipo === "porcentaje") {
         labelValor.textContent = "Tu % de aporte";
         inputValor.placeholder = "Ej. 50";
@@ -162,7 +166,6 @@ const Wizard = {
 
       const valor = Number(inputValor.value);
 
-      // Si todavía no hay valor, no calculamos
       if (!valor || valor <= 0) {
         realAmountEl.textContent = "";
         return;
@@ -175,7 +178,6 @@ const Wizard = {
         valorCompartido: valor
       });
 
-      // Mostrar claramente qué representa el valor
       if (tipo === "porcentaje") {
         realAmountEl.textContent =
           'Tu aporte: ${valor}% · Tu parte real: ${Finanzas.formatoMoneda(montoReal)} / mes';
@@ -184,7 +186,6 @@ const Wizard = {
           'Dividido entre ${valor} personas · Tu parte real: ${Finanzas.formatoMoneda(montoReal)} / mes';
       }
     };
-
     chkCompartido.addEventListener("change", actualizarCalculo);
     inputMonto.addEventListener("input", actualizarCalculo);
     inputValor.addEventListener("input", actualizarCalculo);
