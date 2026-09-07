@@ -136,22 +136,53 @@ const Wizard = {
 
     const actualizarCalculo = () => {
       const visible = chkCompartido.checked;
-      camposCompartido.classList.toggle("is-visible", visible);
-      if (!visible) { realAmountEl.textContent = ""; return; }
 
-      const tipo = card.querySelector(`input[name="tipo-${id}"]:checked`).value;
-      labelValor.textContent = tipo === "porcentaje" ? "Tu % de aporte" : "Número de personas";
-      inputValor.placeholder = tipo === "porcentaje" ? "Ej. 50" : "Ej. 2";
+      camposCompartido.classList.toggle("is-visible", visible);
+        if (!visible) {
+          realAmountEl.textContent = "";
+          return;
+        }
+
+      const tipo = card.querySelector(
+        'input[name="tipo-${id}"]:checked'
+      ).value;
+
+      // Cambiar texto según el tipo de división
+      if (tipo === "porcentaje") {
+        labelValor.textContent = "Tu % de aporte";
+        inputValor.placeholder = "Ej. 50";
+        inputValor.min = "1";
+        inputValor.max = "100";
+        } else {
+        labelValor.textContent = "Número de personas";
+        inputValor.placeholder = "Ej. 2";
+        inputValor.min = "2";
+        inputValor.removeAttribute("max");
+        }
+
+      const valor = Number(inputValor.value);
+
+      // Si todavía no hay valor, no calculamos
+      if (!valor || valor <= 0) {
+        realAmountEl.textContent = "";
+        return;
+      }
 
       const montoReal = Finanzas.calcularMontoReal({
         monto: inputMonto.value,
         compartido: true,
         tipoCompartido: tipo,
-        valorCompartido: inputValor.value
+        valorCompartido: valor
       });
-      realAmountEl.textContent = inputValor.value
-        ? `Tu parte real: ${Finanzas.formatoMoneda(montoReal)} / mes`
-        : "";
+
+      // Mostrar claramente qué representa el valor
+      if (tipo === "porcentaje") {
+        realAmountEl.textContent =
+          'Tu aporte: ${valor}% · Tu parte real: ${Finanzas.formatoMoneda(montoReal)} / mes';
+      } else {
+        realAmountEl.textContent =
+          'Dividido entre ${valor} personas · Tu parte real: ${Finanzas.formatoMoneda(montoReal)} / mes';
+      }
     };
 
     chkCompartido.addEventListener("change", actualizarCalculo);
