@@ -188,13 +188,29 @@ const Wizard = {
           'Dividido entre ${valor} personas · Tu parte real: ${Finanzas.formatoMoneda(montoReal)} / mes';
       }
     };
-    chkCompartido.addEventListener("change", actualizarCalculo);
-    inputMonto.addEventListener("input", actualizarCalculo);
-    inputValor.addEventListener("input", actualizarCalculo);
     radiosTipo.forEach(radio => {
       radio.addEventListener("change", () => {
-        inputValor.value = "";
-        realAmountEl.textContent = "";
+
+        // Guardar el valor de la opción anterior
+        const tipoAnterior = radio.value === "porcentaje"
+          ? "personas"
+          : "porcentaje";
+
+        if (tipoAnterior === "porcentaje") {
+          valorPorcentaje = inputValor.value;
+        } else {
+          valorPersonas = inputValor.value;
+        }
+
+        // Cargar el valor correspondiente a la nueva opción
+        if (radio.checked) {
+          if (radio.value === "porcentaje") {
+            inputValor.value = valorPorcentaje;
+          } else {
+            inputValor.value = valorPersonas;
+          }
+        }
+
         actualizarCalculo();
       });
     });
