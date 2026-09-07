@@ -45,24 +45,78 @@ const Wizard = {
   },
 
   validarPaso(paso) {
-    if (paso === 1) {
-      const principal = document.getElementById("ingreso-principal");
-      if (!principal.value || Number(principal.value) <= 0) {
-        principal.reportValidity();
+  if (paso === 1) {
+    const principal = document.getElementById("ingreso-principal");
+
+    if (!principal.value || Number(principal.value) <= 0) {
+      principal.reportValidity();
+      return false;
+    }
+  }
+
+  if (paso === 2) {
+    const tarjetas = document.querySelectorAll(".gasto-fijo-card");
+
+    for (const card of tarjetas) {
+      const nombre = card.querySelector(".gasto-fijo-card__nombre");
+      const monto = card.querySelector(".gasto-fijo-card__monto");
+      const compartido = card.querySelector(".gasto-fijo-card__compartido");
+      const valorCompartido = card.querySelector(".gasto-fijo-card__valor-compartido");
+
+      // 1. Validar concepto
+      if (!nombre.value.trim()) {
+        nombre.reportValidity();
         return false;
       }
-    }
-    if (paso === 2) {
-      const nombres = document.querySelectorAll(".gasto-fijo-card__nombre");
-      for (const input of nombres) {
-        if (!input.value.trim()) {
-          input.reportValidity();
+
+      // 2. Validar monto
+      if (!monto.value || Number(monto.value) <= 0) {
+        monto.setCustomValidity("El monto debe ser mayor que 0.");
+        monto.reportValidity();
+        monto.setCustomValidity("");
+        return false;
+      }
+
+      // 3. Si NO es compartido, no necesitamos validar porcentaje/personas
+      if (!compartido.checked) {
+        continue;
+      }
+
+      // 4. Obtener el tipo de división
+      const tipo = card.querySelector(
+        `input[name="tipo-${card.dataset.id}"]:checked`
+      ).value;
+
+      const valor = Number(valorCompartido.value);
+
+      // 5. Validar porcentaje
+      if (tipo === "porcentaje") {
+        if (!valorCompartido.value || valor <= 0 || valor > 100) {
+          valorCompartido.setCustomValidity(
+            "El porcentaje debe estar entre 1 y 100."
+          );
+          valorCompartido.reportValidity();
+          valorCompartido.setCustomValidity("");
+          return false;
+        }
+      }
+
+      // 6. Validar número de personas
+      if (tipo === "personas") {
+        if (!valorCompartido.value || valor < 2 || !Number.isInteger(valor)) {
+          valorCompartido.setCustomValidity(
+            "Debe indicar al menos 2 personas."
+          );
+          valorCompartido.reportValidity();
+          valorCompartido.setCustomValidity("");
           return false;
         }
       }
     }
-    return true;
-  },
+  }
+
+  return true;
+},
 
   actualizarPaso() {
     document.querySelectorAll(".wizard-step").forEach(panel => {
@@ -103,17 +157,18 @@ const Wizard = {
         <input class="form-check-input gasto-fijo-card__compartido" type="checkbox" role="switch" id="compartido-${id}">
         <label class="form-check-label" for="compartido-${id}">Es un gasto compartido</label>
 
-        <div class="shared-fields__type">
-        <label>
-          <input type="radio" name="tipo-${id}" value="porcentaje" checked>
-          <span>% de aporte</span>
-        </label>
+        <div class="shared-fields">
+         <div class="shared-fields__type">
+  <label>
+    <input type="radio" name="tipo-${id}" value="porcentaje" checked>
+    <span>% de aporte</span>
+  </label>
 
-        <label>
-          <input type="radio" name="tipo-${id}" value="personas">
-          <span>Nº de personas</span>
-        </label>
-      </div>
+  <label>
+    <input type="radio" name="tipo-${id}" value="personas">
+    <span>Nº de personas</span>
+  </label>
+</div>
           <div class="gasto-fijo-card__field">
             <label id="valor-label-${id}">Tu % de aporte</label>
             <input type="number" min="0" step="1" class="form-control gasto-fijo-card__valor-compartido" placeholder="Ej. 50">
@@ -136,85 +191,102 @@ const Wizard = {
     let valorPorcentaje = "";
     let valorPersonas = "";
 
-    const actualizarCalculo = () => {
-      const visible = chkCompartido.checked;
+  const actualizarCalculo = () => {
+  const visible = chkCompartido.checked;
 
-      camposCompartido.classList.toggle("is-visible", visible);
+  camposCompartido.classList.toggle("is-visible", visible);
 
-      if (!visible) {
-        realAmountEl.textContent = "";
-        return;
-      }
+  if (!visible) {
+    realAmountEl.textContent = "";
+    return;
+  }
 
-      const radioSeleccionado = card.querySelector(
-        'input[name="tipo-${id}"]:checked'
-      );
+  const radioSeleccionado = card.querySelector(
+    `input[name="tipo-${id}"]:checked`
+  );
 
-      if (!radioSeleccionado) return;
+  if (!radioSeleccionado) return;
 
-      const tipo = radioSeleccionado.value;
+  const tipo = radioSeleccionado.value;
 
-      if (tipo === "porcentaje") {
-        labelValor.textContent = "Tu % de aporte";
-        inputValor.placeholder = "Ej. 50";
-        inputValor.min = "1";
-        inputValor.max = "100";
-        } else {
-        labelValor.textContent = "Número de personas";
-        inputValor.placeholder = "Ej. 2";
-        inputValor.min = "2";
-        inputValor.removeAttribute("max");
-        }
+  if (tipo === "porcentaje") {
+    labelValor.textContent = "Tu % de aporte";
+    inputValor.placeholder = "Ej. 50";
+    inputValor.min = "1";
+    inputValor.max = "100";
+  } else {
+    labelValor.textContent = "Número de personas";
+    inputValor.placeholder = "Ej. 2";
+    inputValor.min = "2";
+    inputValor.removeAttribute("max");
+  }
 
-      const valor = Number(inputValor.value);
+  const valor = Number(inputValor.value);
 
-      if (!valor || valor <= 0) {
-        realAmountEl.textContent = "";
-        return;
-      }
+  if (!valor || valor <= 0) {
+    realAmountEl.textContent = "";
+    return;
+  }
 
-      const montoReal = Finanzas.calcularMontoReal({
-        monto: inputMonto.value,
-        compartido: true,
-        tipoCompartido: tipo,
-        valorCompartido: valor
-      });
+  const montoReal = Finanzas.calcularMontoReal({
+    monto: inputMonto.value,
+    compartido: true,
+    tipoCompartido: tipo,
+    valorCompartido: valor
+  });
 
-      if (tipo === "porcentaje") {
-        realAmountEl.textContent =
-          'Tu aporte: ${valor}% · Tu parte real: ${Finanzas.formatoMoneda(montoReal)} / mes';
-      } else {
-        realAmountEl.textContent =
-          'Dividido entre ${valor} personas · Tu parte real: ${Finanzas.formatoMoneda(montoReal)} / mes';
-      }
-    };
+  if (tipo === "porcentaje") {
+    realAmountEl.textContent =
+      `Tu aporte: ${valor}% · Tu parte real: ${Finanzas.formatoMoneda(montoReal)} / mes`;
+  } else {
+    realAmountEl.textContent =
+      `Dividido entre ${valor} personas · Tu parte real: ${Finanzas.formatoMoneda(montoReal)} / mes`;
+  }
+};
+
+    chkCompartido.addEventListener("change", actualizarCalculo);
+    inputMonto.addEventListener("input", actualizarCalculo);
+    inputValor.addEventListener("input", () => {
+
+  const tipo = card.querySelector(
+    `input[name="tipo-${id}"]:checked`
+  ).value;
+
+  if (tipo === "porcentaje") {
+    valorPorcentaje = inputValor.value;
+  } else {
+    valorPersonas = inputValor.value;
+  }
+
+  actualizarCalculo();
+});
     radiosTipo.forEach(radio => {
-      radio.addEventListener("change", () => {
+  radio.addEventListener("change", () => {
 
-        // Guardar el valor de la opción anterior
-        const tipoAnterior = radio.value === "porcentaje"
-          ? "personas"
-          : "porcentaje";
+    // Guardar el valor de la opción anterior
+    const tipoAnterior = radio.value === "porcentaje"
+      ? "personas"
+      : "porcentaje";
 
-        if (tipoAnterior === "porcentaje") {
-          valorPorcentaje = inputValor.value;
-        } else {
-          valorPersonas = inputValor.value;
-        }
+    if (tipoAnterior === "porcentaje") {
+      valorPorcentaje = inputValor.value;
+    } else {
+      valorPersonas = inputValor.value;
+    }
 
-        // Cargar el valor correspondiente a la nueva opción
-        if (radio.checked) {
-          if (radio.value === "porcentaje") {
-            inputValor.value = valorPorcentaje;
-          } else {
-            inputValor.value = valorPersonas;
-          }
-        }
+    // Cargar el valor correspondiente a la nueva opción
+    if (radio.checked) {
+      if (radio.value === "porcentaje") {
+        inputValor.value = valorPorcentaje;
+      } else {
+        inputValor.value = valorPersonas;
+      }
+    }
 
-        actualizarCalculo();
-      });
-    });
-
+    actualizarCalculo();
+  });
+});
+    
     btnQuitar.addEventListener("click", () => {
       card.remove();
       // nunca dejar la lista en cero filas
