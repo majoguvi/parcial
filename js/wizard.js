@@ -189,7 +189,13 @@ const Wizard = {
     chkCompartido.addEventListener("change", actualizarCalculo);
     inputMonto.addEventListener("input", actualizarCalculo);
     inputValor.addEventListener("input", actualizarCalculo);
-    radiosTipo.forEach(r => r.addEventListener("change", actualizarCalculo));
+    radiosTipo.forEach(radio => {
+      radio.addEventListener("change", () => {
+        inputValor.value = "";
+        realAmountEl.textContent = "";
+        actualizarCalculo();
+      });
+    });
 
     btnQuitar.addEventListener("click", () => {
       card.remove();
