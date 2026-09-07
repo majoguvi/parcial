@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Libro Mayor · Caracterización Financiera y Presupuesto</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ======================================================= -->
+<!-- VISTA 1: CARACTERIZACIÓN INICIAL (WIZARD)                -->
+<!-- ======================================================= -->
+<section id="wizard-view" class="ledger-page">
+  <div class="wizard-shell">
+
+    <header class="wizard-head">
+      <p class="wizard-kicker">Página 1 del libro</p>
+      <h1 class="wizard-title">Antes de llevar el libro,<br>conozcamos tus cuentas</h1>
+      <p class="wizard-sub">Tres pasos cortos para fijar tu punto de partida: lo que entra, lo que ya está comprometido y lo que queda libre cada mes.</p>
+    </header>
+
+    <ol class="step-track" id="step-track">
+      <li class="step-track__item is-active" data-step="1"><span class="step-track__num">1</span><span class="step-track__label">Ingresos</span></li>
+      <li class="step-track__item" data-step="2"><span class="step-track__num">2</span><span class="step-track__label">Gastos fijos</span></li>
+      <li class="step-track__item" data-step="3"><span class="step-track__num">3</span><span class="step-track__label">Confirmar</span></li>
+    </ol>
+
+    <form id="wizard-form" novalidate>
+
+      <!-- PASO 1: INGRESOS -->
+      <div class="wizard-step is-active" data-step-panel="1">
+        <h2 class="step-heading">¿Cuánto entra a tu cuenta cada mes?</h2>
+
+        <div class="field-row">
+          <label for="ingreso-principal">Ingreso mensual principal</label>
+          <div class="money-input">
+            <span>$</span>
+            <input type="number" min="0" step="1000" class="form-control" id="ingreso-principal" placeholder="0" required>
+          </div>
+          <p class="field-hint">Tu sueldo, honorarios u otro ingreso base recurrente.</p>
+        </div>
+
+        <div class="field-row">
+          <label for="ingreso-adicional">Ingresos adicionales <span class="optional-tag">opcional</span></label>
+          <div class="money-input">
+            <span>$</span>
+            <input type="number" min="0" step="1000" class="form-control" id="ingreso-adicional" placeholder="0">
+          </div>
+          <p class="field-hint">Arriendos, freelance, bonos u otra entrada regular.</p>
+        </div>
+
+        <div class="step-actions">
+          <span></span>
+          <button type="button" class="btn btn-ledger-primary" data-action="next">Siguiente: Gastos fijos</button>
+        </div>
+      </div>
+
+      <!-- PASO 2: GASTOS FIJOS -->
+      <div class="wizard-step" data-step-panel="2">
+        <h2 class="step-heading">¿Qué ya está comprometido cada mes?</h2>
+        <p class="step-subheading">Agrega cada gasto fijo. Si lo compartes con alguien más, marca la casilla para calcular solo tu parte real.</p>
+
+        <div id="gastos-fijos-list" class="gastos-fijos-list"></div>
+
+        <button type="button" class="btn btn-ledger-ghost" id="btn-add-gasto-fijo">+ Agregar gasto fijo</button>
+
+        <div class="step-actions">
+          <button type="button" class="btn btn-ledger-secondary" data-action="prev">Atrás</button>
+          <button type="button" class="btn btn-ledger-primary" data-action="next">Siguiente: Confirmar</button>
+        </div>
+      </div>
+
+      <!-- PASO 3: CONFIRMAR -->
+      <div class="wizard-step" data-step-panel="3">
+        <h2 class="step-heading">Así queda tu punto de partida</h2>
+        <p class="step-subheading">Revisa las cifras. Podrás registrar tus gastos del día a día apenas guardes esta configuración.</p>
+
+        <div class="summary-preview" id="summary-preview"></div>
+
+        <div class="step-actions">
+          <button type="button" class="btn btn-ledger-secondary" data-action="prev">Atrás</button>
+          <button type="submit" class="btn btn-ledger-primary" id="btn-guardar-config">Guardar configuración</button>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</section>
+
+<!-- ======================================================= -->
+<!-- VISTA 2: DASHBOARD FINANCIERO                             -->
+<!-- ======================================================= -->
+<section id="dashboard-view" class="ledger-page">
+
+  <header class="app-header">
+    <div class="app-header__title">
+      <span class="app-header__mark">Lm</span>
+      <div>
+        <h1>Libro Mayor</h1>
+        <p>Caracterización financiera y presupuesto personal</p>
+      </div>
+    </div>
+    <button type="button" class="btn btn-ledger-ghost" id="btn-reset" data-bs-toggle="modal" data-bs-target="#reset-modal">
+      Resetear / Reconfigurar
+    </button>
+  </header>
+
+  <div class="dashboard-shell">
+
+    <!-- PANEL DE RESUMEN -->
+    <section class="summary-panel" aria-label="Resumen financiero del mes">
+      <div class="summary-cell">
+        <p class="summary-cell__label">Ingresos totales</p>
+        <p class="summary-cell__value summary-cell__value--income" id="stat-ingresos">$0</p>
+      </div>
+      <div class="summary-cell">
+        <p class="summary-cell__label">Gastos fijos (parte real)</p>
+        <p class="summary-cell__value summary-cell__value--expense" id="stat-gastos-fijos">$0</p>
+      </div>
+      <div class="summary-cell summary-cell--hero">
+        <p class="summary-cell__label">Capacidad de ahorro</p>
+        <p class="summary-cell__value summary-cell__value--balance" id="stat-balance">$0</p>
+        <p class="summary-cell__sublabel" id="stat-balance-sub">antes de gastos variables</p>
+      </div>
+      <div class="summary-cell">
+        <p class="summary-cell__label">Gastos variables del mes</p>
+        <p class="summary-cell__value summary-cell__value--variable" id="stat-gastos-variables">$0</p>
+      </div>
+    </section>
+
+    <!-- REGISTRO DIARIO -->
+    <section class="daily-panel">
+
+      <div class="daily-panel__form">
+        <h2 class="panel-heading">Registrar gasto</h2>
+        <form id="gasto-diario-form">
+          <div class="field-row">
+            <label for="gd-concepto">Concepto</label>
+            <input type="text" class="form-control" id="gd-concepto" placeholder="Ej. Almuerzo, cine, taxi" required>
+          </div>
+          <div class="field-row">
+            <label for="gd-monto">Monto</label>
+            <div class="money-input">
+              <span>$</span>
+              <input type="number" min="0" step="500" class="form-control" id="gd-monto" placeholder="0" required>
+            </div>
+          </div>
+          <div class="field-row">
+            <label for="gd-categoria">Categoría</label>
+            <select class="form-select" id="gd-categoria" required>
+              <option value="Comida">Comida</option>
+              <option value="Ocio">Ocio</option>
+              <option value="Transporte">Transporte</option>
+              <option value="Varios">Varios</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-ledger-primary w-100">Agregar al registro</button>
+        </form>
+      </div>
+
+      <div class="daily-panel__table">
+        <h2 class="panel-heading">Movimientos del mes</h2>
+        <div class="table-responsive">
+          <table class="ledger-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Concepto</th>
+                <th>Categoría</th>
+                <th class="text-end">Monto</th>
+                <th class="text-end">Eliminar</th>
+              </tr>
+            </thead>
+            <tbody id="gastos-diarios-body"></tbody>
+          </table>
+          <p class="empty-state" id="empty-state">Aún no registras movimientos. Lo que agregues arriba aparecerá aquí.</p>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</section>
+
+<!-- MODAL DE CONFIRMACIÓN DE RESET -->
+<div class="modal fade" id="reset-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content ledger-modal">
+      <div class="modal-header">
+        <h5 class="modal-title">¿Borrar toda la información?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p>Esto elimina tu caracterización inicial y todos los gastos registrados. Tendrás que volver a hacer el proceso de configuración desde cero.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ledger-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-ledger-danger" id="btn-confirm-reset">Sí, borrar todo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/wizard.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
